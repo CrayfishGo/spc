@@ -1,9 +1,9 @@
+#[macro_use]
+extern crate approx;
 pub mod error;
 pub mod prec;
 pub mod statistics;
-
-#[macro_use]
-extern crate approx;
+pub mod group_stats;
 
 use crate::statistics::Statistics;
 
@@ -53,13 +53,33 @@ pub struct ControlLimits {
     center_line: f64,
     upper_control_limit: f64,
     lower_control_limit: f64,
+    chart_type: SpcChartType,
 }
 
-fn calculate_means(data: &Vec<Vec<f64>>) -> Vec<f64> {
-    data.iter().map(|group| group.mean()).collect()
+
+#[derive(Debug)]
+pub enum SpcChartType {
+    RChart,
+    XbarRChart,
+    SChart,
+    XbarSChart,
+    PChart,
+    NpChart,
+    CChart,
+    UChart,
+    IndividualsChart,
+    MovingAverageChart,
+    MovingRangeChart,
 }
 
-/// 计算每组的极差
-fn calculate_ranges(data: &Vec<Vec<f64>>) -> Vec<f64> {
-    data.iter().map(|group| group.range()).collect()
+#[derive(Debug)]
+pub enum SpcRule {
+    Rule1Beyond3Sigma(usize, usize),
+    Rule2Of3Beyond2Sigma(usize, usize, usize),
+    Rule4Of5Beyond1Sigma(usize, usize, usize),
+    Rule6PointsUpAndDown(usize),
+    Rule8PointsAboveOrBelowCenter(usize),
+    Rule9PointsOnSameSideOfCenter(usize),
+    Rule14PointsOscillating(usize),
+    Rule15PointsWithin1sigma(usize),
 }

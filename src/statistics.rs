@@ -21,7 +21,7 @@ pub enum RankTieBreaker {
 /// The `Statistics` trait provides a host of statistical utilities for
 /// analyzing
 /// data sets
-pub trait Statistics<T> {
+pub trait Statistics {
     /// Returns the minimum value in the data
     ///
     /// # Remarks
@@ -43,7 +43,7 @@ pub trait Statistics<T> {
     /// let z = &[0.0, 3.0, -2.0];
     /// assert_eq!(Statistics::min(z), -2.0);
     /// ```
-    fn min(self) -> T;
+    fn min(&self) -> f64;
 
     /// Returns the maximum value in the data
     ///
@@ -66,7 +66,7 @@ pub trait Statistics<T> {
     /// let z = &[0.0, 3.0, -2.0];
     /// assert_eq!(Statistics::max(z), 3.0);
     /// ```
-    fn max(self) -> T;
+    fn max(&self) -> f64;
 
     /// Returns the minimum absolute value in the data
     ///
@@ -89,7 +89,7 @@ pub trait Statistics<T> {
     /// let z = &[0.0, 3.0, -2.0];
     /// assert_eq!(z.abs_min(), 0.0);
     /// ```
-    fn abs_min(self) -> T;
+    fn abs_min(&self) -> f64;
 
     /// Returns the maximum absolute value in the data
     ///
@@ -112,7 +112,7 @@ pub trait Statistics<T> {
     /// let z = &[0.0, 3.0, -2.0, -8.0];
     /// assert_eq!(z.abs_max(), 8.0);
     /// ```
-    fn abs_max(self) -> T;
+    fn abs_max(&self) -> f64;
 
     /// Evaluates the sample mean, an estimate of the population
     /// mean.
@@ -132,16 +132,16 @@ pub trait Statistics<T> {
     ///
     /// # fn main() {
     /// let x = &[];
-    /// assert!(x.mean().is_nan());
+    /// assert!(x.average().is_nan());
     ///
     /// let y = &[0.0, f64::NAN, 3.0, -2.0];
-    /// assert!(y.mean().is_nan());
+    /// assert!(y.average().is_nan());
     ///
     /// let z = &[0.0, 3.0, -2.0];
-    /// assert_almost_eq!(z.mean(), 1.0 / 3.0, 1e-15);
+    /// assert_almost_eq!(z.average(), 1.0 / 3.0, 1e-15);
     /// # }
     /// ```
-    fn mean(self) -> T;
+    fn average(&self) -> f64;
 
     /// Evaluates the geometric mean of the data
     ///
@@ -162,23 +162,23 @@ pub trait Statistics<T> {
     /// # fn main() {
     ///
     /// let x = &[];
-    /// assert!(x.geometric_mean().is_nan());
+    /// assert!(x.geometric_average().is_nan());
     ///
     /// let y = &[0.0, f64::NAN, 3.0, -2.0];
-    /// assert!(y.geometric_mean().is_nan());
+    /// assert!(y.geometric_average().is_nan());
     ///
     /// let mut z = &[0.0, 3.0, -2.0];
-    /// assert!(z.geometric_mean().is_nan());
+    /// assert!(z.geometric_average().is_nan());
     ///
     /// z = &[0.0, 3.0, 2.0];
-    /// assert_eq!(z.geometric_mean(), 0.0);
+    /// assert_eq!(z.geometric_average(), 0.0);
     ///
     /// z = &[1.0, 2.0, 3.0];
     /// // test value from online calculator, could be more accurate
-    /// assert_almost_eq!(z.geometric_mean(), 1.81712, 1e-5);
+    /// assert_almost_eq!(z.geometric_average(), 1.81712, 1e-5);
     /// # }
     /// ```
-    fn geometric_mean(self) -> T;
+    fn geometric_average(&self) -> f64;
 
     /// Evaluates the harmonic mean of the data
     ///
@@ -203,23 +203,23 @@ pub trait Statistics<T> {
     ///
     /// # fn main() {
     /// let x = &[];
-    /// assert!(x.harmonic_mean().is_nan());
+    /// assert!(x.harmonic_average().is_nan());
     ///
     /// let y = &[0.0, f64::NAN, 3.0, -2.0];
-    /// assert!(y.harmonic_mean().is_nan());
+    /// assert!(y.harmonic_average().is_nan());
     ///
     /// let mut z = &[0.0, 3.0, -2.0];
-    /// assert!(z.harmonic_mean().is_nan());
+    /// assert!(z.harmonic_average().is_nan());
     ///
     /// z = &[0.0, 3.0, 2.0];
-    /// assert_eq!(z.harmonic_mean(), 0.0);
+    /// assert_eq!(z.harmonic_average(), 0.0);
     ///
     /// z = &[1.0, 2.0, 3.0];
     /// // test value from online calculator, could be more accurate
-    /// assert_almost_eq!(z.harmonic_mean(), 1.63636, 1e-5);
+    /// assert_almost_eq!(z.harmonic_average(), 1.63636, 1e-5);
     /// # }
     /// ```
-    fn harmonic_mean(self) -> T;
+    fn harmonic_average(&self) -> f64;
 
     /// Estimates the unbiased population variance from the provided samples
     ///
@@ -246,7 +246,7 @@ pub trait Statistics<T> {
     /// let z = &[0.0, 3.0, -2.0];
     /// assert_eq!(z.variance(), 19.0 / 3.0);
     /// ```
-    fn variance(self) -> T;
+    fn variance(&self) -> f64;
 
     /// Estimates the unbiased population standard deviation from the provided
     /// samples
@@ -274,7 +274,7 @@ pub trait Statistics<T> {
     /// let z = &[0.0, 3.0, -2.0];
     /// assert_eq!(z.std_dev(), (19f64 / 3.0).sqrt());
     /// ```
-    fn std_dev(self) -> T;
+    fn std_dev(&self) -> f64;
 
     /// Evaluates the population variance from a full population.
     ///
@@ -300,7 +300,7 @@ pub trait Statistics<T> {
     /// let z = &[0.0, 3.0, -2.0];
     /// assert_eq!(z.population_variance(), 38.0 / 9.0);
     /// ```
-    fn population_variance(self) -> T;
+    fn population_variance(&self) -> f64;
 
     /// Evaluates the population standard deviation from a full population.
     ///
@@ -326,7 +326,7 @@ pub trait Statistics<T> {
     /// let z = &[0.0, 3.0, -2.0];
     /// assert_eq!(z.population_std_dev(), (38f64 / 9.0).sqrt());
     /// ```
-    fn population_std_dev(self) -> T;
+    fn population_std_dev(&self) -> f64;
 
     /// Estimates the unbiased population covariance between the two provided
     ///
@@ -367,7 +367,7 @@ pub trait Statistics<T> {
     /// assert_almost_eq!(z1.covariance(z2), -5.5, 1e-14);
     /// # }
     /// ```
-    fn covariance(self, other: Self) -> T;
+    fn covariance(&self, other: &Self) -> f64;
 
     /// Evaluates the population covariance between the two provider populations
     ///
@@ -404,7 +404,7 @@ pub trait Statistics<T> {
     /// assert_almost_eq!(z1.population_covariance(z2), -11.0 / 3.0, 1e-14);
     /// # }
     /// ```
-    fn population_covariance(self, other: Self) -> T;
+    fn population_covariance(&self, other: &Self) -> f64;
 
     /// Estimates the quadratic mean (Root Mean Square) of the data
     ///
@@ -423,92 +423,65 @@ pub trait Statistics<T> {
     ///
     /// # fn main() {
     /// let x = &[];
-    /// assert!(x.quadratic_mean().is_nan());
+    /// assert!(x.quadratic_average().is_nan());
     ///
     /// let y = &[0.0, f64::NAN, 3.0, -2.0];
-    /// assert!(y.quadratic_mean().is_nan());
+    /// assert!(y.quadratic_average().is_nan());
     ///
     /// let z = &[0.0, 3.0, -2.0];
     /// // test value from online calculator, could be more accurate
-    /// assert_almost_eq!(z.quadratic_mean(), 2.08167, 1e-5);
+    /// assert_almost_eq!(z.quadratic_average(), 2.08167, 1e-5);
     /// # }
     /// ```
-    fn quadratic_mean(self) -> T;
+    fn quadratic_average(&self) -> f64;
 
     /// Calculates the range
     ///
-    fn range(self) -> T;
+    fn range(&self) -> f64;
 
     /// 计算偏斜度
-    fn skewness(self) -> T;
+    fn skewness(&self) -> f64;
 
     /// 计算峰度
-    fn kurtosis(self) -> T;
+    fn kurtosis(&self) -> f64;
 
     /// 计算坡度
-    fn slope(self, other: Self) -> T;
+    fn slope(&self, other: &Self) -> f64;
 }
 
-impl<T> Statistics<f64> for T
-where
-    T: IntoIterator,
-    T::Item: Borrow<f64>,
-{
-    fn min(self) -> f64 {
-        let mut iter = self.into_iter();
-        match iter.next() {
-            None => f64::NAN,
-            Some(x) => iter.map(|x| *x.borrow()).fold(*x.borrow(), |acc, x| {
-                if x < acc || x.is_nan() { x } else { acc }
-            }),
+impl Statistics for [f64] {
+    fn min(&self) -> f64 {
+        self.iter().copied().reduce(f64::min).unwrap_or(f64::NAN)
+    }
+
+    fn max(&self) -> f64 {
+        self.iter().copied().reduce(f64::max).unwrap_or(f64::NAN)
+    }
+
+    fn abs_min(&self) -> f64 {
+        self.iter()
+            .map(|&x| x.abs())
+            .reduce(f64::min)
+            .unwrap_or(f64::NAN)
+    }
+
+    fn abs_max(&self) -> f64 {
+        self.iter()
+            .map(|&x| x.abs())
+            .reduce(f64::max)
+            .unwrap_or(f64::NAN)
+    }
+
+    fn average(&self) -> f64 {
+        let sum: f64 = self.iter().sum();
+        if self.is_empty() {
+            f64::NAN
+        } else {
+            sum / self.len() as f64
         }
     }
 
-    fn max(self) -> f64 {
-        let mut iter = self.into_iter();
-        match iter.next() {
-            None => f64::NAN,
-            Some(x) => iter.map(|x| *x.borrow()).fold(*x.borrow(), |acc, x| {
-                if x > acc || x.is_nan() { x } else { acc }
-            }),
-        }
-    }
-
-    fn abs_min(self) -> f64 {
-        let mut iter = self.into_iter();
-        match iter.next() {
-            None => f64::NAN,
-            Some(init) => iter
-                .map(|x| x.borrow().abs())
-                .fold(init.borrow().abs(), |acc, x| {
-                    if x < acc || x.is_nan() { x } else { acc }
-                }),
-        }
-    }
-
-    fn abs_max(self) -> f64 {
-        let mut iter = self.into_iter();
-        match iter.next() {
-            None => f64::NAN,
-            Some(init) => iter
-                .map(|x| x.borrow().abs())
-                .fold(init.borrow().abs(), |acc, x| {
-                    if x > acc || x.is_nan() { x } else { acc }
-                }),
-        }
-    }
-
-    fn mean(self) -> f64 {
-        let mut i = 0.0;
-        let mut mean = 0.0;
-        for x in self {
-            i += 1.0;
-            mean += (x.borrow() - mean) / i;
-        }
-        if i > 0.0 { mean } else { f64::NAN }
-    }
-
-    fn geometric_mean(self) -> f64 {
+    fn geometric_average(&self) -> f64 {
         let mut i = 0.0;
         let mut sum = 0.0;
         for x in self {
@@ -518,7 +491,7 @@ where
         if i > 0.0 { (sum / i).exp() } else { f64::NAN }
     }
 
-    fn harmonic_mean(self) -> f64 {
+    fn harmonic_average(&self) -> f64 {
         let mut i = 0.0;
         let mut sum = 0.0;
         for x in self {
@@ -532,34 +505,29 @@ where
         if i > 0.0 { i / sum } else { f64::NAN }
     }
 
-    fn variance(self) -> f64 {
-        let mut iter = self.into_iter();
-        let mut sum = match iter.next() {
-            None => f64::NAN,
-            Some(x) => *x.borrow(),
-        };
-        let mut i = 1.0;
-        let mut variance = 0.0;
-
-        for x in iter {
-            i += 1.0;
-            let borrow = *x.borrow();
-            sum += borrow;
-            let diff = i * borrow - sum;
-            variance += diff * diff / (i * (i - 1.0))
-        }
-        if i > 1.0 {
-            variance / (i - 1.0)
+    fn variance(&self) -> f64 {
+        if self.len() < 2 {
+            0.0
         } else {
-            f64::NAN
+            let average = self.average();
+            let mut v: f64 = 0.0;
+            for s in self {
+                let x = *s - average;
+                v += x * x;
+            }
+            // N.B., this is _supposed to be_ len-1, not len. If you
+            // change it back to len, you will be calculating a
+            // population variance, not a sample variance.
+            let denom = (self.len() - 1) as f64;
+            v / denom
         }
     }
 
-    fn std_dev(self) -> f64 {
+    fn std_dev(&self) -> f64 {
         self.variance().sqrt()
     }
 
-    fn population_variance(self) -> f64 {
+    fn population_variance(&self) -> f64 {
         let mut iter = self.into_iter();
         let mut sum = match iter.next() {
             None => return f64::NAN,
@@ -578,11 +546,11 @@ where
         variance / i
     }
 
-    fn population_std_dev(self) -> f64 {
+    fn population_std_dev(&self) -> f64 {
         self.population_variance().sqrt()
     }
 
-    fn covariance(self, other: Self) -> f64 {
+    fn covariance(&self, other: &Self) -> f64 {
         let mut n = 0.0;
         let mut mean1 = 0.0;
         let mut mean2 = 0.0;
@@ -612,7 +580,7 @@ where
         }
     }
 
-    fn population_covariance(self, other: Self) -> f64 {
+    fn population_covariance(&self, other: &Self) -> f64 {
         let mut n = 0.0;
         let mut mean1 = 0.0;
         let mut mean2 = 0.0;
@@ -637,114 +605,60 @@ where
         if n > 0.0 { comoment / n } else { f64::NAN }
     }
 
-    fn quadratic_mean(self) -> f64 {
+    fn quadratic_average(&self) -> f64 {
         let mut i = 0.0;
-        let mut mean = 0.0;
+        let mut average = 0.0;
         for x in self {
             let borrow = *x.borrow();
             i += 1.0;
-            mean += (borrow * borrow - mean) / i;
+            average += (borrow * borrow - average) / i;
         }
-        if i > 0.0 { mean.sqrt() } else { f64::NAN }
+        if i > 0.0 { average.sqrt() } else { f64::NAN }
     }
 
-    fn range(self) -> f64 {
-        let mut d = 0.0;
-        let mut d1 = 0.0;
-        let mut i = 0;
-        for x in self {
-            let borrow = *x.borrow();
-            if i == 0 {
-                d = borrow;
-                d1 = borrow;
-            } else {
-                d = if d >= borrow { borrow } else { d };
-                d1 = if d1 <= borrow { borrow } else { d1 }
-            }
-            i += 1;
-        }
-        d1 - d
+    fn range(&self) -> f64 {
+        self.max() - self.min()
     }
 
-    fn skewness(self) -> f64 {
-        let iter = self.into_iter();
-        // Step 1: 计算均值
-        let mut sum = 0.0;
-        let mut count = 0;
-        let mut values = Vec::new(); // 保存所有数据
-        for value in iter {
-            let value_f64: f64 = *value.borrow();
-            sum += value_f64;
-            count += 1;
-            values.push(value_f64);
-        }
-
-        if count == 0 {
-            panic!("Input data is empty");
-        }
-
-        let mean = sum / count as f64;
-
-        // Step 2: 计算方差
+    fn skewness(&self) -> f64 {
+        let mean = self.average();
         let mut variance = 0.0;
-        for &value in &values {
+        for &value in self {
             variance += (value - mean).powi(2);
         }
-        variance /= count as f64;
-
-        // Step 3: 计算偏度
+        variance /= self.len() as f64;
         let mut skewness = 0.0;
-        for &value in &values {
+        for &value in self {
             skewness += (value - mean).powi(3);
         }
-        skewness /= count as f64;
+        skewness /= self.len() as f64;
         skewness /= variance.powf(1.5);
         skewness
     }
 
-    fn kurtosis(self) -> f64 {
-        let iter = self.into_iter();
-
-        // Step 1: 计算均值 (mean)
-        let mut sum = 0.0;
-        let mut count = 0;
-        let mut values = Vec::new(); // 保存所有数据
-        for item in iter {
-            let value = item.borrow(); // 获取引用的值
-            sum += value;
-            count += 1;
-            values.push(*value); // 解引用值并保存
-        }
-        if count == 0 {
-            panic!("Input data is empty");
-        }
-
-        let mean = sum / count as f64;
-
-        // Step 2: 计算方差 (variance)
+    fn kurtosis(&self) -> f64 {
+        let mean = self.average();
         let mut variance = 0.0;
-        for &value in &values {
+        for &value in self {
             variance += (value - mean).powi(2);
         }
-        variance /= count as f64;
-
-        // Step 3: 计算峰度 (kurtosis)
+        variance /= self.len() as f64;
         let mut kurtosis = 0.0;
-        for &value in &values {
+        for &value in self {
             kurtosis += (value - mean).powi(4);
         }
-        kurtosis /= count as f64;
+        kurtosis /= self.len() as f64;
         kurtosis /= variance.powi(2);
         kurtosis -= 3.0; // 偏峰度修正
         kurtosis
     }
 
-    fn slope(self, other: Self) -> f64 {
+    fn slope(&self, other: &Self) -> f64 {
         let mut iter_x = self.into_iter();
         let mut iter_y = other.into_iter();
 
-        let len_x = iter_x.size_hint().0;
-        let len_y = iter_y.size_hint().0;
+        let len_x = self.len();
+        let len_y = other.len();
         if len_x != len_y {
             panic!("number of x and y values are not equal");
         }
@@ -776,9 +690,10 @@ mod op_test {
     #[test]
     fn test_op() {
         let nums = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let range = (&nums).range();
-        println!("range =    {:?}", range);
-        println!("skewness = {:?}", (&nums).skewness());
+        println!("range =    {:?}", nums.range());
+        println!("min =      {:?}", nums.min());
+        println!("max =      {:?}", nums.max());
+        println!("skewness = {:?}", nums.skewness());
         println!("kurtosis = {:?}", nums.kurtosis())
     }
 }

@@ -1,4 +1,3 @@
-use crate::SpcChartType;
 use crate::statistics::Statistics;
 
 const A2: [f64; 26] = [
@@ -29,9 +28,9 @@ const c4: [f64; 26] = [
     0.9896,
 ];
 
-const B3: [f64; 24] = [
-    0.0, 0.0, 0.0, 0.0, 0.030, 0.118, 0.185, 0.239, 0.284, 0.321, 0.354, 0.382, 0.406, 0.428,
-    0.448, 0.446, 0.482, 0.497, 0.510, 0.523, 0.534, 0.545, 0.555, 0.565,
+const B3: [f64; 26] = [
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.030, 0.118, 0.185, 0.239, 0.284, 0.321, 0.354, 0.382, 0.406,
+    0.428, 0.448, 0.446, 0.482, 0.497, 0.510, 0.523, 0.534, 0.545, 0.555, 0.565,
 ];
 const B4: [f64; 26] = [
     0.0, 0.0, 3.276, 2.568, 2.266, 2.089, 1.970, 1.882, 1.815, 1.761, 1.716, 1.679, 1.640, 1.618,
@@ -39,41 +38,57 @@ const B4: [f64; 26] = [
 ];
 
 #[derive(Debug)]
+pub enum GroupStatsChartType {
+    RChart,
+    XbarRChart,
+    SChart,
+    XbarSChart,
+}
+
+#[derive(Debug)]
 pub struct GroupStats {
-    pub center_line: f64,
-    pub upper_control_limit: f64,
-    pub lower_control_limit: f64,
-    pub chart_type: SpcChartType,
-    pub data: Vec<Vec<f64>>,
-    pub sub_group_size: usize,
-    pub ranges: Vec<f64>,
-    pub stddev: Vec<f64>,
-    pub average: Vec<f64>,
-    pub range_average: f64,
-    pub range_stddev: f64,
-    pub stddev_average: f64,
-    pub stddev_stddev: f64,
-    pub average_average: f64,
-    pub average_stddev: f64,
-    pub all_average: f64,
-    pub all_stddev: f64,
-    pub minimum: Vec<f64>,
-    pub maximum: Vec<f64>,
-    pub dirty: bool,
+    cl: f64,
+    ucl: f64,
+    lcl: f64,
+    pub chart_type: GroupStatsChartType,
+    data: Vec<Vec<f64>>,
+    sub_group_size: usize,
+    all_data: Vec<f64>,
+    ranges: Vec<f64>,
+    stddev: Vec<f64>,
+    average: Vec<f64>,
+    range_average: f64,
+    range_stddev: f64,
+    stddev_average: f64,
+    stddev_stddev: f64,
+    average_average: f64,
+    average_stddev: f64,
+    all_average: f64,
+    all_stddev: f64,
+    sigma_estimate: f64,
+    minimum: Vec<f64>,
+    maximum: Vec<f64>,
+    dirty: bool,
+    group_count: usize,
 }
 
 impl GroupStats {
-    pub fn new(sub_group_size: usize, chart_type: SpcChartType) -> Result<GroupStats, String> {
+    pub fn new(
+        sub_group_size: usize,
+        chart_type: GroupStatsChartType,
+        group_count: Option<usize>,
+    ) -> Result<GroupStats, String> {
         if sub_group_size < 2 || sub_group_size > 25 {
             return Err("GroupStats: sub_group_size must be in range 2..25".to_string());
         }
         Ok(Self {
-            center_line: 0.0,
-            upper_control_limit: 0.0,
-            lower_control_limit: 0.0,
+            cl: 0.0,
+            ucl: 0.0,
+            lcl: 0.0,
             chart_type,
             data: vec![],
             sub_group_size,
+            all_data: vec![],
             ranges: vec![],
             stddev: vec![],
             average: vec![],
@@ -85,9 +100,11 @@ impl GroupStats {
             average_stddev: 0.0,
             all_average: 0.0,
             all_stddev: 0.0,
+            sigma_estimate: 0.0,
             minimum: vec![],
             maximum: vec![],
             dirty: true,
+            group_count: group_count.unwrap_or(100),
         })
     }
 
@@ -100,6 +117,7 @@ impl GroupStats {
             ));
         }
         self.data.push(group_data.to_vec());
+        self.all_data.extend_from_slice(group_data);
         let range = group_data.range();
         let stddev = group_data.std_dev();
         let average = group_data.average();
@@ -111,6 +129,17 @@ impl GroupStats {
         self.minimum.push(minimum);
         self.maximum.push(maximum);
         self.dirty = true;
+        if self.data.len() > self.group_count {
+            self.data.remove(0);
+            self.ranges.remove(0);
+            self.stddev.remove(0);
+            self.average.remove(0);
+            self.minimum.remove(0);
+            self.maximum.remove(0);
+            if self.sub_group_size > 0 {
+                self.all_data.drain(0..self.sub_group_size);
+            }
+        }
         Ok(())
     }
 
@@ -124,21 +153,133 @@ impl GroupStats {
         self.stddev_stddev = self.stddev.std_dev();
         self.average_average = self.average.average();
         self.average_stddev = self.average.std_dev();
+        self.all_average = self.all_data.average();
+        self.all_stddev = self.all_data.std_dev();
 
+        match self.chart_type {
+            GroupStatsChartType::RChart => {
+                self.cl = self.range_average;
+                self.ucl = D4[self.sub_group_size] * self.range_average;
+                self.lcl = D3[self.sub_group_size] * self.range_average;
+                self.sigma_estimate = self.range_average / d2[self.sub_group_size];
+            }
+            GroupStatsChartType::XbarRChart => {
+                self.cl = self.average_average;
+                self.ucl = self.average_average + A2[self.sub_group_size] * self.range_average;
+                self.lcl = self.average_average - A2[self.sub_group_size] * self.range_average;
+                self.sigma_estimate = self.range_average / d2[self.sub_group_size];
+            }
+            GroupStatsChartType::SChart => {
+                self.cl = self.stddev_average;
+                self.ucl = B4[self.sub_group_size] * self.stddev_average;
+                self.lcl = B3[self.sub_group_size] * self.stddev_average;
+                self.sigma_estimate = self.stddev_average / c4[self.sub_group_size];
+            }
+            GroupStatsChartType::XbarSChart => {
+                self.cl = self.average_average;
+                self.ucl = self.average_average + A3[self.sub_group_size] * self.stddev_average;
+                self.lcl = self.average_average - A3[self.sub_group_size] * self.stddev_average;
+                self.sigma_estimate = self.stddev_average / c4[self.sub_group_size];
+            }
+        }
+        self.dirty = false;
     }
 
     pub fn lcl(&mut self) -> f64 {
         self.update();
-        self.lower_control_limit
+        self.lcl
     }
 
     pub fn ucl(&mut self) -> f64 {
         self.update();
-        self.upper_control_limit
+        self.ucl
     }
 
     pub fn cl(&mut self) -> f64 {
         self.update();
-        self.center_line
+        self.cl
+    }
+
+    pub fn data(&mut self) -> &Vec<Vec<f64>> {
+        self.update();
+        &self.data
+    }
+
+    pub fn sub_group_size(&self) -> usize {
+        self.sub_group_size
+    }
+
+    pub fn ranges(&mut self) -> &Vec<f64> {
+        self.update();
+        &self.ranges
+    }
+
+    pub fn stddev(&mut self) -> &Vec<f64> {
+        self.update();
+        &self.stddev
+    }
+
+    pub fn average(&mut self) -> &Vec<f64> {
+        self.update();
+        &self.average
+    }
+
+    pub fn range_average(&mut self) -> f64 {
+        self.update();
+        self.range_average
+    }
+
+    pub fn range_stddev(&mut self) -> f64 {
+        self.update();
+        self.range_stddev
+    }
+
+    pub fn stddev_average(&mut self) -> f64 {
+        self.update();
+        self.stddev_average
+    }
+
+    pub fn stddev_stddev(&mut self) -> f64 {
+        self.update();
+        self.stddev_stddev
+    }
+
+    pub fn average_average(&mut self) -> f64 {
+        self.update();
+        self.average_average
+    }
+
+    pub fn average_stddev(&mut self) -> f64 {
+        self.update();
+        self.average_stddev
+    }
+
+    pub fn all_average(&mut self) -> f64 {
+        self.update();
+        self.all_average
+    }
+
+    pub fn all_stddev(&mut self) -> f64 {
+        self.update();
+        self.all_stddev
+    }
+
+    pub fn sigma_estimate(&mut self) -> f64 {
+        self.update();
+        self.sigma_estimate
+    }
+
+    pub fn minimum(&mut self) -> &Vec<f64> {
+        self.update();
+        &self.minimum
+    }
+
+    pub fn maximum(&mut self) -> &Vec<f64> {
+        self.update();
+        &self.maximum
+    }
+
+    pub fn dirty(&self) -> bool {
+        self.dirty
     }
 }

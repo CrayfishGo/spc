@@ -1,9 +1,11 @@
 #[macro_use]
 extern crate approx;
 pub mod error;
+pub mod group_stats;
 pub mod prec;
 pub mod statistics;
-pub mod group_stats;
+mod moving_stats;
+mod attribute_stats;
 
 use crate::statistics::Statistics;
 
@@ -47,30 +49,6 @@ pub const EULER_MASCHERONI: f64 =
 
 /// Targeted accuracy instantiated over `f64`
 pub const ACC: f64 = 10e-11;
-
-#[derive(Debug)]
-pub struct ControlLimits {
-    center_line: f64,
-    upper_control_limit: f64,
-    lower_control_limit: f64,
-    chart_type: SpcChartType,
-}
-
-
-#[derive(Debug)]
-pub enum SpcChartType {
-    RChart,
-    XbarRChart,
-    SChart,
-    XbarSChart,
-    PChart,
-    NpChart,
-    CChart,
-    UChart,
-    IndividualsChart,
-    MovingAverageChart,
-    MovingRangeChart,
-}
 
 #[derive(Debug)]
 pub enum SpcRule {

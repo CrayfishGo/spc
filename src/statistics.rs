@@ -445,6 +445,8 @@ pub trait Statistics {
     /// 计算峰度
     fn kurtosis(&self) -> f64;
 
+    fn median(&self) -> f64;
+
     /// 计算坡度
     fn slope(&self, other: &Self) -> f64;
 }
@@ -618,6 +620,26 @@ impl Statistics for [f64] {
 
     fn range(&self) -> f64 {
         self.max() - self.min()
+    }
+
+    fn median(&self) -> f64 {
+        // 检查数据是否为空
+        if self.is_empty() {
+            return f64::NAN;
+        }
+        // 创建数据副本并排序
+        let mut sorted_data = self.to_vec();
+        sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap()); // 排序处理
+        let len = sorted_data.len();
+        if len % 2 == 0 {
+            // 偶数个数据时，取中间两个数的平均值
+            let mid1 = sorted_data[len / 2 - 1];
+            let mid2 = sorted_data[len / 2];
+            (mid1 + mid2) / 2.0
+        } else {
+            // 奇数个数据时，取中间值
+            sorted_data[len / 2]
+        }
     }
 
     fn skewness(&self) -> f64 {

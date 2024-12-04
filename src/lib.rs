@@ -9,6 +9,75 @@ pub mod attribute_stats;
 
 use crate::statistics::Statistics;
 
+///
+/// ```rust
+///     use spc_rs::group_stats::{GroupStats, GroupStatsChartType};
+///     pub fn main() {
+///         let v1 = vec![
+///             0.65, 0.75, 0.75, 0.60, 0.70, 0.60, 0.75, 0.60, 0.65, 0.60, 0.80, 0.85, 0.70, 0.65,
+///             0.90, 0.75, 0.75, 0.75, 0.65, 0.60, 0.50, 0.60, 0.80, 0.65, 0.65,
+///         ];
+///         let v2 = vec![
+///             0.70, 0.85, 0.80, 0.70, 0.75, 0.75, 0.80, 0.70, 0.80, 0.70, 0.75, 0.75, 0.70, 0.70,
+///             0.80, 0.80, 0.70, 0.70, 0.65, 0.60, 0.55, 0.80, 0.65, 0.60, 0.70,
+///         ];
+///         let v3 = vec![
+///             0.65, 0.75, 0.80, 0.70, 0.65, 0.75, 0.65, 0.80, 0.85, 0.60, 0.90, 0.85, 0.75, 0.85,
+///             0.80, 0.75, 0.85, 0.60, 0.85, 0.65, 0.65, 0.65, 0.75, 0.65, 0.70,
+///         ];
+///         let v4 = vec![
+///             0.65, 0.85, 0.70, 0.75, 0.85, 0.85, 0.75, 0.75, 0.85, 0.80, 0.50, 0.65, 0.75, 0.75,
+///             0.75, 0.80, 0.70, 0.70, 0.65, 0.60, 0.80, 0.65, 0.65, 0.60, 0.60,
+///         ];
+///         let v5 = vec![
+///             0.85, 0.65, 0.75, 0.65, 0.80, 0.70, 0.70, 0.75, 0.75, 0.65, 0.80, 0.70, 0.70, 0.60,
+///             0.85, 0.65, 0.80, 0.60, 0.70, 0.65, 0.80, 0.75, 0.65, 0.70, 0.65,
+///         ];
+///
+///         let mut xbar_r_chart_stats =
+///             GroupStats::new(5, GroupStatsChartType::XbarRChart, None).unwrap();
+///         for i in 0..v1.len() {
+///             let _r = xbar_r_chart_stats
+///                 .add_data(&vec![v1[i], v2[i], v3[i], v4[i], v5[i]])
+///                 .unwrap();
+///         }
+///
+///         let ucl = xbar_r_chart_stats.ucl();
+///         let lcl = xbar_r_chart_stats.lcl();
+///         let cl = xbar_r_chart_stats.cl();
+///         let average = xbar_r_chart_stats.average;
+///         let ranges = xbar_r_chart_stats.ranges;
+///         println!("ucl: {:.2}", ucl);
+///         println!("cl:  {:.2}", cl);
+///         println!("lcl: {:.2}", lcl);
+///         println!(
+///             "average: {:?}",
+///             average
+///                 .into_iter()
+///                 .map(|x| (x * 100.0).round() / 100.0)
+///                 .collect::<Vec<f64>>()
+///         );
+///         println!(
+///             "range: {:?}",
+///             ranges
+///                 .into_iter()
+///                 .map(|x| (x * 100.0).round() / 100.0)
+///                 .collect::<Vec<f64>>()
+///         );
+///     }
+///
+/// ```
+///
+///
+///
+///
+///
+///
+///
+///
+
+
+
 #[macro_export]
 macro_rules! assert_almost_eq {
     ($a:expr, $b:expr, $prec:expr) => {
@@ -59,5 +128,5 @@ pub enum SpcRule {
     Rule8PointsAboveOrBelowCenter(usize),
     Rule9PointsOnSameSideOfCenter(usize),
     Rule14PointsOscillating(usize),
-    Rule15PointsWithin1sigma(usize),
+    Rule15PointsWithin1Sigma(usize),
 }

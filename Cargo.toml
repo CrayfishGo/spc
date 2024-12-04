@@ -1,7 +1,15 @@
 [package]
-name = "spc"
+name = "rspc"
 version = "0.1.0"
 edition = "2024"
+
+description = "A Rust Implementation of SPC (Statistical Process Control)"
+authors = ["evanyang1120@163.com"]
+homepage = "https://github.com/CrayfishGo/spc.git"
+license = "MIT"
+keywords = ["SPC", "Statistical", "math", "statistics"]
+readme = "README.md"
+documentation = "https://docs.rs/rspc/"
 
 [dependencies]
 num-traits = "0.2.14"

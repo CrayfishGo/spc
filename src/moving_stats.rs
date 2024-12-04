@@ -16,7 +16,7 @@ const D4: [f64; 11] = [
     0.0, 0.0, 3.267, 2.574, 2.282, 2.114, 2.004, 1.924, 1.864, 1.816, 1.777,
 ];
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum MovingStatsChartType {
     IndividualsChart,
     MovingAverageChart,

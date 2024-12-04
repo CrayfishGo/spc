@@ -1,6 +1,6 @@
 use num_traits::Float;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum AttributeStatsChartType {
     PChart,
     NpChart,
@@ -72,9 +72,9 @@ impl AttributeStats {
             }
             AttributeStatsChartType::NpChart => {
                 let mut sum = 0.0;
-                for d in self.defects {
+                for d in &self.defects {
                     sum += d;
-                    self.data.push(d);
+                    self.data.push(*d);
                 }
                 let n = self.defects.len() as f64;
                 let k = self.samples.get(0).unwrap();
@@ -87,9 +87,9 @@ impl AttributeStats {
             }
             AttributeStatsChartType::CChart => {
                 let mut sum = 0.0;
-                for d in self.defects {
+                for d in &self.defects {
                     sum += d;
-                    self.data.push(d);
+                    self.data.push(*d);
                 }
                 let n = self.defects.len() as f64;
                 self.average = sum / n;
@@ -122,8 +122,8 @@ impl AttributeStats {
         if self.chart_type.eq(&AttributeStatsChartType::NpChart) {
             if !self.samples.is_empty() {
                 let f = self.samples.get(0).unwrap();
-                if f != sample {
-                    return Err("Can't change number test for NP charts");
+                if *f != sample {
+                    return Err("Can't change number test for NP charts".parse().unwrap());
                 }
             }
         }
@@ -137,6 +137,7 @@ impl AttributeStats {
             self.samples.remove(0);
         }
         self.dirty = true;
+        Ok(())
     }
 
     pub fn lcl(&mut self, sigma_multiple: Option<f64>) -> f64 {

@@ -4,8 +4,8 @@ pub mod error;
 pub mod group_stats;
 pub mod prec;
 pub mod statistics;
-mod moving_stats;
-mod attribute_stats;
+pub mod moving_stats;
+pub mod attribute_stats;
 
 use crate::statistics::Statistics;
 

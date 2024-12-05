@@ -25,25 +25,25 @@ Support folwing charts:
 
 # How to choose an appropriate control chart
 
-![img.png](img.png)
+<img src="https://image-1302694066.cos.ap-shanghai.myqcloud.com/img.png" alt="img.png" style="zoom:67%;" />
 
 ## SPC Rule
 * **Rule1Beyond3Sigma**
-    ![img_1.png](img_1.png)
+    <img src="https://image-1302694066.cos.ap-shanghai.myqcloud.com/img_1.png" alt="img_1.png" style="zoom:50%;" />
 * **Rule2Of3Beyond2Sigma**
-    ![img_5.png](img_5.png)
+    <img src="https://image-1302694066.cos.ap-shanghai.myqcloud.com/img_5.png" alt="img_5.png" style="zoom:50%;" />
 * **Rule4Of5Beyond1Sigma**
-    ![img_6.png](img_6.png)
+    <img src="https://image-1302694066.cos.ap-shanghai.myqcloud.com/img_6.png" alt="img_6.png" style="zoom:50%;" />
 * **Rule6PointsUpAndDown**
-    ![img_3.png](img_3.png)
+    <img src="https://image-1302694066.cos.ap-shanghai.myqcloud.com/img_3.png" alt="img_3.png" style="zoom:50%;" />
 * **Rule8PointsAboveOrBelowCenter**
-    ![img_8.png](img_8.png)
+    <img src="https://image-1302694066.cos.ap-shanghai.myqcloud.com/img_8.png" alt="img_8.png" style="zoom:50%;" />
 * **Rule9PointsOnSameSideOfCenter**
-    ![img_2.png](img_2.png)
+    <img src="https://image-1302694066.cos.ap-shanghai.myqcloud.com/img_2.png" alt="img_2.png" style="zoom:50%;" />
 * **Rule14PointsOscillating**
-    ![img_4.png](img_4.png)
+    <img src="https://image-1302694066.cos.ap-shanghai.myqcloud.com/img_4.png" alt="img_4.png" style="zoom:50%;" />
 * **Rule15PointsWithin1Sigma**
-    ![img_7.png](img_7.png)
+    <img src="https://image-1302694066.cos.ap-shanghai.myqcloud.com/img_7.png" alt="img_7.png" style="zoom:50%;" />
 
 
 ## Examples

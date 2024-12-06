@@ -1,22 +1,8 @@
 use crate::error::StatsError;
-use num_traits::Pow;
 use num_traits::float::FloatCore;
 use num_traits::real::Real;
+use num_traits::Pow;
 use std::borrow::Borrow;
-
-/// Enumeration of possible tie-breaking strategies
-/// when computing ranks
-#[derive(Debug, Copy, Clone)]
-pub enum RankTieBreaker {
-    /// Replaces ties with their mean
-    Average,
-    /// Replace ties with their minimum
-    Min,
-    /// Replace ties with their maximum
-    Max,
-    /// Permutation with increasing values at each index of ties
-    First,
-}
 
 /// The `Statistics` trait provides a host of statistical utilities for
 /// analyzing
@@ -32,7 +18,7 @@ pub trait Statistics {
     ///
     /// ```
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// let x = &[];
     /// assert!(Statistics::min(x).is_nan());
@@ -55,7 +41,7 @@ pub trait Statistics {
     ///
     /// ```
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// let x = &[];
     /// assert!(Statistics::max(x).is_nan());
@@ -78,7 +64,7 @@ pub trait Statistics {
     ///
     /// ```
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// let x = &[];
     /// assert!(x.abs_min().is_nan());
@@ -101,7 +87,7 @@ pub trait Statistics {
     ///
     /// ```
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// let x = &[];
     /// assert!(x.abs_max().is_nan());
@@ -125,10 +111,10 @@ pub trait Statistics {
     ///
     /// ```
     /// #[macro_use]
-    /// extern crate spc;
+    /// extern crate spc_rs;
     ///
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// # fn main() {
     /// let x = &[];
@@ -155,9 +141,9 @@ pub trait Statistics {
     ///
     /// ```
     /// #[macro_use]
-    /// extern crate spc;
+    /// extern crate spc_rs;
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// # fn main() {
     ///
@@ -196,10 +182,10 @@ pub trait Statistics {
     ///
     /// ```
     /// #[macro_use]
-    /// extern crate spc;
+    /// extern crate spc_rs;
     ///
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// # fn main() {
     /// let x = &[];
@@ -235,7 +221,7 @@ pub trait Statistics {
     ///
     /// ```
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// let x = &[];
     /// assert!(x.variance().is_nan());
@@ -263,7 +249,7 @@ pub trait Statistics {
     ///
     /// ```
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// let x = &[];
     /// assert!(x.std_dev().is_nan());
@@ -289,7 +275,7 @@ pub trait Statistics {
     ///
     /// ```
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// let x = &[];
     /// assert!(x.population_variance().is_nan());
@@ -315,7 +301,7 @@ pub trait Statistics {
     ///
     /// ```
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// let x = &[];
     /// assert!(x.population_std_dev().is_nan());
@@ -349,10 +335,10 @@ pub trait Statistics {
     ///
     /// ```
     /// #[macro_use]
-    /// extern crate spc;
+    /// extern crate spc_rs;
     ///
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// # fn main() {
     /// let x = &[];
@@ -386,10 +372,10 @@ pub trait Statistics {
     ///
     /// ```
     /// #[macro_use]
-    /// extern crate spc;
+    /// extern crate spc_rs;
     ///
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// # fn main() {
     /// let x = &[];
@@ -416,10 +402,10 @@ pub trait Statistics {
     ///
     /// ```
     /// #[macro_use]
-    /// extern crate spc;
+    /// extern crate spc_rs;
     ///
     /// use std::f64;
-    /// use spc::statistics::Statistics;
+    /// use spc_rs::statistics::Statistics;
     ///
     /// # fn main() {
     /// let x = &[];
@@ -716,6 +702,6 @@ mod op_test {
         println!("min =      {:?}", nums.min());
         println!("max =      {:?}", nums.max());
         println!("skewness = {:?}", nums.skewness());
-        println!("kurtosis = {:?}", nums.kurtosis())
+        println!("kurtosis = {:?}", nums.kurtosis());
     }
 }

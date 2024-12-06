@@ -1,4 +1,5 @@
 use crate::statistics::Statistics;
+use crate::{is_alternating, is_decreasing, is_increasing, Rounding, RoundingContext, SpcRule, SpcRuleValidationResult};
 
 const A2: [f64; 26] = [
     0.0, 0.0, 1.880, 1.023, 0.729, 0.577, 0.483, 0.419, 0.373, 0.337, 0.308, 0.285, 0.266, 0.249,
@@ -70,13 +71,183 @@ pub struct GroupStats {
     maximum: Vec<f64>,
     dirty: bool,
     group_count: usize,
+    rounding_ctx: Option<RoundingContext>,
 }
+
+impl GroupStats {
+    pub fn apply_rule_validation(&mut self, rules: Vec<SpcRule>) -> Vec<SpcRuleValidationResult> {
+        let mut res = vec![];
+        let chart_data = self.chart_data();
+        let chart_average = self.chart_average();
+        let sigma = self.chart_sigma();
+        for rule in rules {
+            let mut bad_point_index = vec![];
+            let mut passed = true;
+            match rule {
+                SpcRule::Rule1Beyond3Sigma(p, s) => {
+                    let mut ucl = chart_average + s as f64 * sigma;
+                    let mut lcl = chart_average - s as f64 * sigma;
+                    if let Some(ctx) = &self.rounding_ctx {
+                        ucl = ucl.scale(ctx.scale, &ctx.rounding_mode);
+                        lcl = lcl.scale(ctx.scale, &ctx.rounding_mode);
+                    }
+                    for (index, &value) in chart_data.iter().enumerate() {
+                        if value > ucl || value < lcl {
+                            bad_point_index.push(index);
+                        }
+                    }
+                    if bad_point_index.len() >= p {
+                        passed = false;
+                    }
+                    if passed {
+                        bad_point_index.clear();
+                    }
+                }
+
+                SpcRule::Rule2Of3Beyond2Sigma(p, n, s) | SpcRule::Rule4Of5Beyond1Sigma(p, n, s) => {
+                    if chart_data.len() >= n {
+                        let mut ucl = chart_average + s as f64 * sigma;
+                        let mut lcl = chart_average - s as f64 * sigma;
+                        if let Some(ctx) = &self.rounding_ctx {
+                            ucl = ucl.scale(ctx.scale, &ctx.rounding_mode);
+                            lcl = lcl.scale(ctx.scale, &ctx.rounding_mode);
+                        }
+                        for i in 0..chart_data.len().saturating_sub(n - 1) {
+                            let window = &chart_data[i..i + n]; // Take n consecutive elements
+                            let count = window.iter().filter(|&&x| x > ucl || x < lcl).count();
+                            if count >= p {
+                                passed = false;
+                                for (offset, &value) in window.iter().enumerate() {
+                                    if value > ucl || value < lcl {
+                                        if !bad_point_index.contains(&(offset + i)) {
+                                            bad_point_index.push(i + offset);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                SpcRule::Rule6PointsUpOrDown(p) => {
+                    if chart_data.len() >= p {
+                        for i in 0..chart_data.len().saturating_sub(p - 1) {
+                            let window = &chart_data[i..i + p];
+                            if is_increasing(window) || is_decreasing(window) {
+                                passed = false;
+                                for j in 0..window.len() {
+                                    if !bad_point_index.contains(&(i + j)) {
+                                        bad_point_index.push(i + j);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                SpcRule::Rule8PointsAboveOrBelowCenter(p) => {
+                    let mut ucl = chart_average + sigma;
+                    let mut lcl = chart_average - sigma;
+                    if let Some(ctx) = &self.rounding_ctx {
+                        ucl = ucl.scale(ctx.scale, &ctx.rounding_mode);
+                        lcl = lcl.scale(ctx.scale, &ctx.rounding_mode);
+                    }
+                    if chart_data.len() >= p {
+                        for i in 0..chart_data.len().saturating_sub(p - 1) {
+                            let window = &chart_data[i..i + p];
+                            let count = window.iter().filter(|&&x| x > ucl || x < lcl).count();
+                            if count >= p {
+                                passed = false;
+                                for (offset, &value) in window.iter().enumerate() {
+                                    if value < ucl || value > lcl {
+                                        if !bad_point_index.contains(&(i + offset)) {
+                                            bad_point_index.push(i + offset);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                SpcRule::Rule9PointsOnSameSideOfCenter(p) => {
+                    if chart_data.len() >= p {
+                        for i in 0..chart_data.len().saturating_sub(p - 1) {
+                            let window = &chart_data[i..i + p];
+                            let flag = window
+                                .iter()
+                                .all(|&x| x < chart_average || x > chart_average);
+                            if flag {
+                                passed = false;
+                                for (offset, &value) in window.iter().enumerate() {
+                                    if !bad_point_index.contains(&(i + offset)) {
+                                        bad_point_index.push(i + offset);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                SpcRule::Rule14PointsOscillating(p) => {
+                    if chart_data.len() >= p {
+                        for i in 0..chart_data.len().saturating_sub(p - 1) {
+                            let window = &chart_data[i..i + p];
+                            if is_alternating(window) {
+                                passed = false;
+                                for j in 0..window.len() {
+                                    if !bad_point_index.contains(&(i + j)) {
+                                        bad_point_index.push(i + j);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                SpcRule::Rule15PointsWithin1Sigma(p, s) => {
+                    if chart_data.len() >= p {
+                        let mut ucl = chart_average + s as f64 * sigma;
+                        let mut lcl = chart_average - s as f64 * sigma;
+                        if let Some(ctx) = &self.rounding_ctx {
+                            ucl = ucl.scale(ctx.scale, &ctx.rounding_mode);
+                            lcl = lcl.scale(ctx.scale, &ctx.rounding_mode);
+                        }
+                        for i in 0..chart_data.len().saturating_sub(p - 1) {
+                            let window = &chart_data[i..i + p];
+                            let count = window.iter().filter(|&&x| x < ucl || x > lcl).count();
+                            if count >= p {
+                                passed = false;
+                                for (offset, &value) in window.iter().enumerate() {
+                                    if value < ucl || value > lcl {
+                                        if !bad_point_index.contains(&(i + offset)) {
+                                            bad_point_index.push(i + offset);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            let mut bad_point_data = vec![];
+            for i in 0..chart_data.len() {
+                if bad_point_index.contains(&i) {
+                    bad_point_data.push(chart_data[i]);
+                }
+            }
+            res.push(SpcRuleValidationResult {
+                rule,
+                bad_point_index,
+                bad_point_data,
+                validation_passed: passed,
+            });
+        }
+        res
+    }
+}
+
 
 impl GroupStats {
     pub fn new(
         sub_group_size: usize,
         chart_type: GroupStatsChartType,
-        group_count: Option<usize>,
     ) -> Result<GroupStats, String> {
         if sub_group_size < 2 || sub_group_size > 25 {
             return Err("GroupStats: sub_group_size must be in range 2..25".to_string());
@@ -104,7 +275,8 @@ impl GroupStats {
             minimum: vec![],
             maximum: vec![],
             dirty: true,
-            group_count: group_count.unwrap_or(100),
+            group_count: 100,
+            rounding_ctx: None,
         })
     }
 
@@ -118,11 +290,18 @@ impl GroupStats {
         }
         self.data.push(group_data.to_vec());
         self.all_data.extend_from_slice(group_data);
-        let range = group_data.range();
-        let stddev = group_data.std_dev();
-        let average = group_data.average();
-        let minimum = group_data.min();
-        let maximum = group_data.max();
+        let mut range = group_data.range();
+        let mut stddev = group_data.std_dev();
+        let mut average = group_data.average();
+        let mut minimum = group_data.min();
+        let mut maximum = group_data.max();
+        if let Some(ctx) = &self.rounding_ctx {
+            range = range.scale(ctx.scale, &ctx.rounding_mode);
+            stddev = stddev.scale(ctx.scale, &ctx.rounding_mode);
+            average = average.scale(ctx.scale, &ctx.rounding_mode);
+            minimum = minimum.scale(ctx.scale, &ctx.rounding_mode);
+            maximum = maximum.scale(ctx.scale, &ctx.rounding_mode);
+        }
         self.ranges.push(range);
         self.stddev.push(stddev);
         self.average.push(average);
@@ -182,111 +361,147 @@ impl GroupStats {
                 self.sigma_estimate = self.stddev_average / c4[self.sub_group_size];
             }
         }
+        match &self.rounding_ctx {
+            None => {}
+            Some(ctx) => {
+                self.range_average = self.range_average.scale(ctx.scale, &ctx.rounding_mode);
+                self.range_stddev = self.range_stddev.scale(ctx.scale, &ctx.rounding_mode);
+                self.stddev_average = self.stddev_average.scale(ctx.scale, &ctx.rounding_mode);
+                self.stddev_stddev = self.stddev_stddev.scale(ctx.scale, &ctx.rounding_mode);
+                self.average_average = self.average_average.scale(ctx.scale, &ctx.rounding_mode);
+                self.average_stddev = self.average_stddev.scale(ctx.scale, &ctx.rounding_mode);
+                self.all_average = self.all_average.scale(ctx.scale, &ctx.rounding_mode);
+                self.all_stddev = self.all_stddev.scale(ctx.scale, &ctx.rounding_mode);
+
+                self.cl = self.cl.scale(ctx.scale, &ctx.rounding_mode);
+                self.ucl = self.ucl.scale(ctx.scale, &ctx.rounding_mode);
+                self.lcl = self.lcl.scale(ctx.scale, &ctx.rounding_mode);
+                self.sigma_estimate = self.sigma_estimate.scale(ctx.scale, &ctx.rounding_mode);
+            }
+        }
         self.dirty = false;
     }
 
-    pub fn lcl(&mut self) -> f64 {
-        self.update();
+    pub fn lcl(&self) -> f64 {
         self.lcl
     }
 
-    pub fn ucl(&mut self) -> f64 {
-        self.update();
+    pub fn ucl(&self) -> f64 {
         self.ucl
     }
 
-    pub fn cl(&mut self) -> f64 {
-        self.update();
+    pub fn cl(&self) -> f64 {
         self.cl
     }
 
-    pub fn data(&mut self) -> &Vec<Vec<f64>> {
-        self.update();
-        &self.data
+    pub fn data(&self) -> Vec<Vec<f64>> {
+        self.data.to_vec()
+    }
+
+    pub fn chart_data(&mut self) -> Vec<f64> {
+        match self.chart_type {
+            GroupStatsChartType::RChart => self.ranges.to_vec(),
+            GroupStatsChartType::XbarRChart => self.average.to_vec(),
+            GroupStatsChartType::SChart => self.stddev.to_vec(),
+            GroupStatsChartType::XbarSChart => self.average.to_vec(),
+        }
+    }
+
+    pub fn chart_average(&mut self) -> f64 {
+        match self.chart_type {
+            GroupStatsChartType::RChart => self.range_average,
+            GroupStatsChartType::XbarRChart => self.average_average,
+            GroupStatsChartType::SChart => self.stddev_average,
+            GroupStatsChartType::XbarSChart => self.average_average,
+        }
+    }
+
+    pub fn chart_sigma(&mut self) -> f64 {
+        (self.ucl - self.chart_average()) / 3.0
     }
 
     pub fn sub_group_size(&self) -> usize {
         self.sub_group_size
     }
 
-    pub fn ranges(&mut self) -> &Vec<f64> {
-        self.update();
-        &self.ranges
+    pub fn ranges(&self) -> Vec<f64> {
+        self.ranges.to_vec()
     }
 
-    pub fn stddev(&mut self) -> &Vec<f64> {
-        self.update();
-        &self.stddev
+    pub fn stddev(&self) -> Vec<f64> {
+        self.stddev.to_vec()
     }
 
-    pub fn average(&mut self) -> &Vec<f64> {
-        self.update();
-        &self.average
+    pub fn average(&self) -> Vec<f64> {
+        self.average.to_vec()
     }
 
-    pub fn range_average(&mut self) -> f64 {
-        self.update();
+    pub fn range_average(&self) -> f64 {
         self.range_average
     }
 
-    pub fn range_stddev(&mut self) -> f64 {
-        self.update();
+    pub fn range_stddev(&self) -> f64 {
         self.range_stddev
     }
 
-    pub fn stddev_average(&mut self) -> f64 {
-        self.update();
+    pub fn stddev_average(&self) -> f64 {
         self.stddev_average
     }
 
-    pub fn stddev_stddev(&mut self) -> f64 {
-        self.update();
+    pub fn stddev_stddev(&self) -> f64 {
         self.stddev_stddev
     }
 
-    pub fn average_average(&mut self) -> f64 {
-        self.update();
+    pub fn average_average(&self) -> f64 {
         self.average_average
     }
 
-    pub fn average_stddev(&mut self) -> f64 {
-        self.update();
+    pub fn average_stddev(&self) -> f64 {
         self.average_stddev
     }
 
-    pub fn all_average(&mut self) -> f64 {
-        self.update();
+    pub fn all_average(&self) -> f64 {
         self.all_average
     }
 
-    pub fn all_stddev(&mut self) -> f64 {
-        self.update();
+    pub fn all_stddev(&self) -> f64 {
         self.all_stddev
     }
 
-    pub fn sigma_estimate(&mut self) -> f64 {
-        self.update();
+    pub fn sigma_estimate(&self) -> f64 {
         self.sigma_estimate
     }
 
-    pub fn minimum(&mut self) -> &Vec<f64> {
-        self.update();
-        &self.minimum
+    pub fn minimum(&self) -> Vec<f64> {
+        self.minimum.to_vec()
     }
 
-    pub fn maximum(&mut self) -> &Vec<f64> {
-        self.update();
-        &self.maximum
+    pub fn maximum(&self) -> Vec<f64> {
+        self.maximum.to_vec()
     }
 
     pub fn dirty(&self) -> bool {
         self.dirty
+    }
+
+    pub fn rounding_ctx(&self) -> &Option<RoundingContext> {
+        &self.rounding_ctx
+    }
+
+    pub fn set_rounding_ctx(&mut self, rounding_ctx: Option<RoundingContext>) {
+        self.rounding_ctx = rounding_ctx;
+    }
+
+    pub fn set_group_count(&mut self, group_count: usize) {
+        self.group_count = group_count;
     }
 }
 
 #[cfg(test)]
 mod test_group_stats {
     use crate::group_stats::{GroupStats, GroupStatsChartType};
+    use crate::RoundingMode::RoundHalfUp;
+    use crate::{RoundingContext, SpcRule};
 
     #[test]
     pub fn test_xbar_r_chart() {
@@ -311,35 +526,30 @@ mod test_group_stats {
             0.85, 0.65, 0.80, 0.60, 0.70, 0.65, 0.80, 0.75, 0.65, 0.70, 0.65,
         ];
 
-        let mut xbar_r_chart_stats =
-            GroupStats::new(5, GroupStatsChartType::XbarRChart, None).unwrap();
+        let mut xbar_r_chart_stats = GroupStats::new(5, GroupStatsChartType::XbarRChart).unwrap();
+        xbar_r_chart_stats.set_group_count(100);
+        xbar_r_chart_stats.set_rounding_ctx(Some(RoundingContext::new(2, RoundHalfUp)));
         for i in 0..v1.len() {
             let _r = xbar_r_chart_stats
                 .add_data(&vec![v1[i], v2[i], v3[i], v4[i], v5[i]])
                 .unwrap();
         }
 
+        xbar_r_chart_stats.update();
         let ucl = xbar_r_chart_stats.ucl();
         let lcl = xbar_r_chart_stats.lcl();
         let cl = xbar_r_chart_stats.cl();
-        let average = xbar_r_chart_stats.average;
-        let ranges = xbar_r_chart_stats.ranges;
-        println!("ucl: {:.2}", ucl);
-        println!("cl:  {:.2}", cl);
-        println!("lcl: {:.2}", lcl);
-        println!(
-            "average: {:?}",
-            average
-                .into_iter()
-                .map(|x| (x * 100.0).round() / 100.0)
-                .collect::<Vec<f64>>()
-        );
-        println!(
-            "range: {:?}",
-            ranges
-                .into_iter()
-                .map(|x| (x * 100.0).round() / 100.0)
-                .collect::<Vec<f64>>()
-        );
+        let average = xbar_r_chart_stats.average();
+        let ranges = xbar_r_chart_stats.ranges();
+        println!("ucl: {}", ucl);
+        println!("cl: {}", cl);
+        println!("lcl: {}", lcl);
+        println!("average: {:?}", average);
+        println!("range: {:?}", ranges);
+        let res = xbar_r_chart_stats.apply_rule_validation(vec![
+            SpcRule::Rule1Beyond3Sigma(1, 2),
+            SpcRule::Rule2Of3Beyond2Sigma(2, 3, 1),
+        ]);
+        println!("res: {:#?}", res);
     }
 }

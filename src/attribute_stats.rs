@@ -163,17 +163,17 @@ impl AttributeStats {
         self.max_elements
     }
 
-    pub fn samples(&self) -> &Vec<f64> {
-        &self.samples
+    pub fn samples(&self) -> Vec<f64> {
+        self.samples.to_vec()
     }
 
-    pub fn defects(&self) -> &Vec<f64> {
-        &self.defects
+    pub fn defects(&self) -> Vec<f64> {
+        self.defects.to_vec()
     }
 
-    pub fn data(&mut self) -> &Vec<f64> {
+    pub fn data(&mut self) -> Vec<f64> {
         self.update(None);
-        &self.data
+        self.data.to_vec()
     }
 
     pub fn average(&mut self) -> f64 {

@@ -1,4 +1,5 @@
 use num_traits::Float;
+use crate::RoundingContext;
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum AttributeStatsChartType {
@@ -20,23 +21,27 @@ pub struct AttributeStats {
     data: Vec<f64>,
     average: f64,
     dirty: bool,
+    rounding_ctx: Option<RoundingContext>,
 }
 
 impl AttributeStats {
-    pub fn new(max_elements: Option<usize>, chart_type: AttributeStatsChartType) -> AttributeStats {
+    pub fn new(chart_type: AttributeStatsChartType) -> AttributeStats {
         Self {
             cl: 0.0,
             ucl: 0.0,
             lcl: 0.0,
             chart_type,
-            max_elements: max_elements.unwrap_or(100),
+            max_elements: 100,
             samples: vec![],
             defects: vec![],
             data: vec![],
             average: 0.0,
             dirty: false,
+            rounding_ctx: None,
         }
     }
+
+
 
     pub fn update(&mut self, sigma_multiple: Option<f64>) {
         if !self.dirty {
@@ -183,5 +188,13 @@ impl AttributeStats {
 
     pub fn dirty(&self) -> bool {
         self.dirty
+    }
+
+    pub fn set_max_elements(&mut self, max_elements: usize) {
+        self.max_elements = max_elements;
+    }
+
+    pub fn set_rounding_ctx(&mut self, rounding_ctx: Option<RoundingContext>) {
+        self.rounding_ctx = rounding_ctx;
     }
 }

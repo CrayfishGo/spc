@@ -1,3 +1,4 @@
+use crate::RoundingContext;
 use crate::statistics::Statistics;
 
 const A2: [f64; 11] = [
@@ -45,13 +46,13 @@ pub struct MovingStats {
     max_elements: usize,
     ucl_data: Vec<f64>,
     lcl_data: Vec<f64>,
+    rounding_ctx: Option<RoundingContext>,
 }
 
 impl MovingStats {
     pub fn new(
         sub_group_size: usize,
         chart_type: MovingStatsChartType,
-        range_span_size: Option<usize>,
     ) -> Result<Self, String> {
         if sub_group_size < 2 || sub_group_size > 10 {
             return Err("MovingStats: sub_group_size must be in range 2..10".to_string());
@@ -65,7 +66,7 @@ impl MovingStats {
             data: vec![],
             range_data: vec![],
             sub_group_size,
-            range_span_size: range_span_size.unwrap_or(2),
+            range_span_size: 2,
             all_data: vec![],
             range: 0.0,
             stddev: 0.0,
@@ -78,8 +79,11 @@ impl MovingStats {
             max_elements: 100,
             ucl_data: vec![],
             lcl_data: vec![],
+            rounding_ctx: None,
         })
     }
+
+
 
     pub fn add_data(&mut self, value: f64) {
         self.data.push(value);
@@ -164,4 +168,14 @@ impl MovingStats {
         }
         self.dirty = true;
     }
+
+    pub fn set_range_span_size(&mut self, range_span_size: usize) {
+        self.range_span_size = range_span_size;
+    }
+
+    pub fn set_rounding_ctx(&mut self, rounding_ctx: Option<RoundingContext>) {
+        self.rounding_ctx = rounding_ctx;
+    }
+
+
 }
